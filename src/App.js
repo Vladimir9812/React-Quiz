@@ -1,25 +1,57 @@
-import logo from './logo.svg';
-import './App.css';
+import Layout from "./hoc/Layout/Layout";
+import {Route, Routes, Navigate} from "react-router-dom";
+import Quiz from "./containers/Quiz/Quiz";
+import Auth from "./containers/Auth/Auth";
+import QuizCreator from "./containers/QuizCreator/QuizCreator";
+import QuizList from "./containers/QuizList/QuizList";
+import {connect} from "react-redux";
+import {Component} from "react";
+import Logout from "./components/Logout/Logout";
+import {autoLogin} from "./store/actions/auth";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+  componentDidMount() {
+    this.props.autoLogin();
+  }
+
+  render() {
+    const routes = this.props.isAuthencated
+      ? (
+          <Routes>
+            <Route path="/quiz-creator" element={<QuizCreator/>}/>
+            <Route path="/quiz/:id" element={<Quiz/>}/>
+            <Route path="/" element={<QuizList/>}/>
+            <Route path="/logout" element={<Logout/>}/>
+            <Route path="*" element={<Navigate to ="/"/>}/>
+          </Routes>
+        )
+      : (
+        <Routes>
+          <Route path="/auth" element={<Auth />}/>
+          <Route path="/quiz/:id" element={<Quiz/>}/>
+          <Route path="/" element={<QuizList/>}/>
+          <Route path="*" element={<Navigate to ="/auth"/>}/>
+        </Routes>
+      );
+
+    return (
+      <Layout>
+        {routes}
+      </Layout>
+    );
+  }
 }
 
-export default App;
+function mapStateToProps(state) {
+  return {
+    isAuthencated: !!state.auth.token
+  }
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    autoLogin: () => dispatch(autoLogin())
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
